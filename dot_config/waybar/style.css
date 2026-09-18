@@ -1,0 +1,17 @@
+@import "../../.cache/wal/colors-waybar.css";
+
+* {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 14px;
+}
+window#waybar {
+    background-color: @background;
+}
+#workspaces button.active {
+    color: @color2;
+}
+#network, #bluetooth, #cpu, #memory, #tray, #clock {
+    color: @foreground;
+    margin: 0 6px;
+    padding: 0 4px;
+}

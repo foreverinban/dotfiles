@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+hosts=$(grep -i '^Host ' ~/.ssh/config 2>/dev/null | awk '{print $2}' | grep -v '\*' || true)
+
+if [ -z "$hosts" ]; then
+    echo "В ~/.ssh/config нет хостов"
+    exit 1
+fi
+
+layout_file=$(mktemp --suffix=.kdl)
+{
+  echo 'layout {'
+  echo '    tab name="Magic" {'
+  for h in $hosts; do
+    echo "        pane command=\"ssh\" { args \"$h\" }"
+  done
+  echo '    }'
+  echo '}'
+} > "$layout_file"
+
+zellij --layout "$layout_file"
