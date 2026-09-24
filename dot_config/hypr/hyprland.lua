@@ -291,6 +291,7 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 --hl.bind(mainmod .. " + H", hl.dsp.exec_cmd([[grim -g "$(slurp)" - | wl-copy]]))
 hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("wofi --show drun"))
 hl.bind("SUPER + H", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("pidof hyprlock || hyprlock"))   -- экран блокировки
 
 
 
