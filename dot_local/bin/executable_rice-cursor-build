@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# rice-cursor-build — тёмный Bibata Modern с обводкой в едином accent → ~/.local/share/icons/Rice-Cursor
+# Зависимости: git, node/npx (cbmp, тянет headless chromium при первом запуске), ctgen (pipx install clickgen).
+# Если сборка невозможна — Rice-Cursor становится алиасом Bibata-Modern-Classic (тоже тёмный).
+# Обводка фиксируется на момент сборки: перезапусти после смены ACCENT_SLOT.
+set -euo pipefail
+ACC=$(tr -d '[:space:]' < "$HOME/.cache/rice/accent" 2>/dev/null || echo '#7f95ad')
+BASE="${RICE_CURSOR_BASE:-#111318}"
+NAME=Rice-Cursor
+DEST="$HOME/.local/share/icons/$NAME"
+
+alias_theme() {
+    echo "rice-cursor-build: $1 — ставлю алиас на Bibata-Modern-Classic" >&2
+    rm -rf "$DEST"; mkdir -p "$DEST"
+    printf '[Icon Theme]\nName=%s\nComment=alias\nInherits=Bibata-Modern-Classic\n' "$NAME" > "$DEST/index.theme"
+    exit 0
+}
+
+command -v npx  >/dev/null || alias_theme "нет npx"
+command -v ctgen >/dev/null || alias_theme "нет ctgen (pipx install clickgen)"
+
+work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
+git clone -q --depth 1 https://github.com/ful1e5/Bibata_Cursor "$work/b" || alias_theme "git clone не удался"
+cd "$work/b"
+cat > rice.json <<JSON
+{ "$NAME": { "dir": "svg/modern", "out": "bitmaps/$NAME",
+  "colors": [ { "match": "#00FF00", "replace": "$BASE" },
+              { "match": "#0000FF", "replace": "$ACC" },
+              { "match": "#FF0000", "replace": "$ACC" } ] } }
+JSON
+npx --yes cbmp rice.json                                              || alias_theme "cbmp упал"
+ctgen configs/normal/x.build.toml -p x11 -d "bitmaps/$NAME" -o out \
+      -n "$NAME" -c "Rice: dark base, accent $ACC outline"             || alias_theme "ctgen упал"
+built=$(find out -maxdepth 2 -type d -name "$NAME" | head -1)
+[ -n "$built" ] || alias_theme "не нашёл результат сборки"
+rm -rf "$DEST"; mkdir -p "$(dirname "$DEST")"; cp -r "$built" "$DEST"
+command -v hyprctl >/dev/null && hyprctl setcursor "$NAME" 24 >/dev/null 2>&1 || true
+echo "rice-cursor-build: $NAME собран (обводка $ACC)"

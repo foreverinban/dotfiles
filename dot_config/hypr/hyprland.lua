@@ -78,6 +78,7 @@ end)
 
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Environment-variables/
 
+hl.env("XCURSOR_THEME", "Rice-Cursor")    -- тёмный Bibata + обводка accent (rice-cursor-build)
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")   -- Qt-приложения берут палитру из ~/.cache/rice/qt-colors.conf
