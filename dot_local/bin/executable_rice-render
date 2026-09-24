@@ -72,6 +72,23 @@ def ensure_contrast(color, bg, minimum, toward="#e6e9ef"):
     return c
 
 
+def pick_tone(colors, kind, accent):
+    """urgent/warn для критичности: самый «красный»/«жёлтый» цвет из color1..6.
+    Для монохромных (сине-серых) палитр, где такого нет, — мягкий тон,
+    подмешанный к accent, чтобы остаться в характере палитры."""
+    cands = [colors[f"color{i}"] for i in range(1, 7)]
+    if kind == "urgent":
+        score = lambda h: hex2rgb(h)[0] - (hex2rgb(h)[1] + hex2rgb(h)[2]) / 2
+        target = "#c0605c"
+    else:
+        score = lambda h: (hex2rgb(h)[0] + hex2rgb(h)[1]) / 2 - hex2rgb(h)[2]
+        target = "#c2a064"
+    best = max(cands, key=score)
+    if score(best) >= 28:
+        return best
+    return mix(accent, target, 0.65)
+
+
 def build_vars():
     conf = read_conf(CONF)
     with open(WAL) as f:
@@ -96,8 +113,8 @@ def build_vars():
         fg_dim=mix(fg, bg, 0.35),
         muted=ensure_contrast(colors["color8"], bg, 2.0),
         ok=ensure_contrast(colors["color2"], bg, minc),
-        warn=ensure_contrast(colors["color3"], bg, minc),
-        urgent=ensure_contrast(colors["color1"], bg, minc),
+        warn=ensure_contrast(pick_tone(colors, "warn", accent), bg, minc),
+        urgent=ensure_contrast(pick_tone(colors, "urgent", accent), bg, minc),
     )
 
     v = {}

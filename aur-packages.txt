@@ -26,8 +26,10 @@ illogical-impulse-toolkit
 mpvpaper
 nv
 otf-space-grotesk
+papirus-folders
 python-pywal16
 python-screeninfo
+sddm-astronaut-theme
 spotify
 ttf-material-symbols-variable-git
 ttf-readex-pro

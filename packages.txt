@@ -7,6 +7,7 @@ awww
 base
 base-devel
 bash-language-server
+bat
 bind
 blueman
 bluez
@@ -15,11 +16,14 @@ btop
 btrfs-progs
 chezmoi
 claude-code
+cliphist
 cups
 cups-pk-helper
+curl
 discord
 dosfstools
 efibootmgr
+eza
 fastfetch
 fd
 figlet
@@ -38,6 +42,7 @@ gvfs
 gvfs-mtp
 happ-desktop-bin
 htop
+hyprlock
 hyprpaper
 hyprshutdown
 hysteria-bin
@@ -54,12 +59,14 @@ illogical-impulse-portal
 illogical-impulse-python
 illogical-impulse-screencapture
 illogical-impulse-toolkit
+imagemagick
 inotify-tools
 intel-media-driver
 intel-ucode
 ironbar
 jq
 kitty
+libnotify
 libpulse
 libva-intel-driver
 linux
@@ -81,8 +88,10 @@ nwg-displays
 nwg-look
 obsidian
 openbsd-netcat
+openssh
 otf-font-awesome
 pacman-contrib
+papirus-icon-theme
 pavucontrol
 pipewire
 pipewire-alsa
@@ -94,6 +103,10 @@ python-pip
 python-pipx
 python-pywal16
 python-screeninfo
+qt5ct
+qt6-multimedia-ffmpeg
+qt6-svg
+qt6-virtualkeyboard
 qt6ct
 quickshell
 ruff
@@ -106,6 +119,7 @@ sof-firmware
 spotify
 starship
 sudo
+swappy
 swaync
 system-config-printer
 tailscale
@@ -113,6 +127,7 @@ tcpdump
 telegram-desktop
 tree
 ttf-firacode-nerd
+ttf-jetbrains-mono-nerd
 ttf-liberation
 ttf-nerd-fonts-symbols
 tumbler
@@ -127,6 +142,8 @@ vulkan-nouveau
 vulkan-radeon
 waybar
 wev
+wl-clipboard
+wlogout
 woff2-font-awesome
 wofi
 wpa_supplicant
