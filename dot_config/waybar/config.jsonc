@@ -16,7 +16,7 @@
     "group/time":   { "orientation": "horizontal", "modules": ["clock", "clock#utc"] },
     "group/net":    { "orientation": "horizontal", "modules": ["network", "bluetooth"] },
     "group/sys":    { "orientation": "horizontal", "modules": ["cpu", "memory", "battery"] },
-    "group/remote": { "orientation": "horizontal", "modules": ["custom/uptime"] },
+    "group/remote": { "orientation": "horizontal", "modules": ["custom/weather", "custom/uptime"] },
 
     "hyprland/workspaces": {
         "format": "{name}"
@@ -63,6 +63,12 @@
         "signal": 8,
         "tooltip": true,
         "on-click": "pkill -RTMIN+8 waybar"
+    },
+    "custom/weather": {
+        "exec": "~/.local/bin/waybar-weather",
+        "return-type": "json",
+        "interval": 1800,
+        "tooltip": true
     },
     "custom/zellij": {
         "exec": "~/.local/bin/waybar-zellij",

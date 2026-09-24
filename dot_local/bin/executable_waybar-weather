@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# waybar custom/weather — wttr.in, текстовый лейбл "WX". Город: WEATHER_LOC в rice.conf.
+CONF="$HOME/.config/rice/rice.conf"
+[ -f "$CONF" ] && source "$CONF"
+loc=$(printf '%s' "${WEATHER_LOC:-}" | sed 's/ /+/g')
+cache="$HOME/.cache/rice/weather.json"
+now=$(curl -sf --max-time 8 "https://wttr.in/${loc}?m&format=%t" | tr -d '+')
+tip=$(curl -sf --max-time 8 "https://wttr.in/${loc}?m&format=%l:+%C,+%t+(feels+%f),+wind+%w,+hum+%h" )
+if [ -n "$now" ] && [[ "$now" != *Unknown* ]]; then
+    jq -cn --arg t "WX $now" --arg tt "$tip" '{text:$t, tooltip:$tt, class:"ok"}' | tee "$cache"
+elif [ -f "$cache" ]; then
+    jq -c '.class="stale"' "$cache"          # сеть пропала — показываем последнее значение
+else
+    echo '{"text":"WX n/a","class":"stale"}'
+fi

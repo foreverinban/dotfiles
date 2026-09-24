@@ -71,3 +71,4 @@ tooltip label { color: @foreground; }
 #custom-uptime.down { color: @urgent; }
 
 #network.disconnected, #bluetooth.disabled { color: @muted; }
+#custom-weather.stale { color: @muted; }

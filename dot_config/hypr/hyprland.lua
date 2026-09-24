@@ -307,6 +307,9 @@ hl.bind("Print",                     hl.dsp.exec_cmd("grimblast --freeze save ar
 hl.bind(mainMod .. " + SHIFT + H",   hl.dsp.exec_cmd("grimblast --freeze save area - | swappy -f -"))
 hl.bind("SHIFT + Print",             hl.dsp.exec_cmd("grimblast --notify --freeze copysave area \"$HOME/photo/screenshots/shot-$(date +%Y%m%d-%H%M%S).png\""))
 hl.bind(mainMod .. " + V",           hl.dsp.exec_cmd("pkill -x wofi || /home/lain/.local/bin/rice-clip"))   -- история буфера
+hl.bind(mainMod .. " + Escape",      hl.dsp.exec_cmd("pkill -x wlogout || wlogout -b 5 -T 380 -B 380"))   -- power menu
+hl.bind(mainMod .. " + SHIFT + B",   hl.dsp.exec_cmd("kitty --class btop -e btop"))                     -- btop в отдельном окне
+hl.bind(mainMod .. " + SHIFT + W",   hl.dsp.exec_cmd("/home/lain/.local/bin/rice-apply --next"))          -- следующие обои + палитра
 
 
 
@@ -399,6 +402,14 @@ hl.layer_rule({ name = "blur-wlogout", match = { namespace = "^logout_dialog$" }
 -- overlayLayerRule:set_enabled(false)
 
 -- Hyprland-run windowrule
+hl.window_rule({
+    name  = "float-btop",
+    match = { class = "^btop$" },
+    float = true,
+    center = true,
+    size  = { "(monitor_w*0.7)", "(monitor_h*0.7)" },
+})
+
 hl.window_rule({
     name  = "float-swappy",
     match = { class = "^swappy$" },
