@@ -1,0 +1,12 @@
+[Default]
+save_dir=$HOME/photo/screenshots
+save_filename_format=shot-%Y%m%d-%H%M%S.png
+show_panel=true
+line_size=5
+text_size=18
+text_font=JetBrainsMono Nerd Font
+# первый инструмент — blur: сразу замазать IP/хосты перед вставкой в отчёт
+paint_mode=blur
+early_exit=true
+fill_shape=false
+auto_save=false

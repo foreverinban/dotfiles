@@ -5,6 +5,7 @@
 #   rice-apply --random     случайное из пула
 #   rice-apply --reload     перерендерить шаблоны с текущими обоями (без wal)
 set -uo pipefail
+export PATH="$HOME/.local/bin:$PATH"
 
 CONF="$HOME/.config/rice/rice.conf"
 [ -f "$CONF" ] && source "$CONF"
@@ -62,7 +63,7 @@ if [ "$mode" != "--reload" ]; then
 fi
 
 # 2. наши шаблоны (единый accent, прозрачность, lua/css/conf)
-rice-render || echo "rice-render: ошибка" >&2
+"$HOME/.local/bin/rice-render" || echo "rice-render: ошибка" >&2
 
 # 3. обои на все мониторы
 if command -v hyprctl >/dev/null && [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then

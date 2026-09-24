@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# rice-clip — история буфера (cliphist) в wofi с превью картинок.
+# Картинки показываются миниатюрами (кэш ~/.cache/cliphist/thumbs), текст — первой строкой.
+set -uo pipefail
+thumbs="${XDG_CACHE_HOME:-$HOME/.cache}/cliphist/thumbs"
+mkdir -p "$thumbs"
+list=$(cliphist list) || exit 1
+[ -z "$list" ] && { notify-send -a clipboard "Буфер пуст" 2>/dev/null; exit 0; }
+
+# чистим миниатюры удалённых записей
+ids=$(printf '%s\n' "$list" | cut -f1)
+for f in "$thumbs"/*; do
+    [ -e "$f" ] || continue
+    id=$(basename "${f%.*}")
+    grep -qx "$id" <<<"$ids" || rm -f "$f"
+done
+
+menu=$(printf '%s\n' "$list" | while IFS=$'\t' read -r id rest; do
+    if [[ "$rest" =~ ^\[\[\ binary.*(png|jpg|jpeg|webp|bmp) ]]; then
+        ext=${BASH_REMATCH[1]}
+        t="$thumbs/$id.$ext"
+        [ -f "$t" ] || printf '%s\t\n' "$id" | cliphist decode | magick - -thumbnail '240x240>' "$t" 2>/dev/null
+        printf 'img:%s:text:%s\n' "$t" "$id"
+    else
+        printf '%s\t%s\n' "$id" "$rest"
+    fi
+done)
+
+choice=$(printf '%s\n' "$menu" | wofi --dmenu --prompt clip --allow-images -Dimage_size=120 -Ddynamic_lines=true --cache-file /dev/null) || exit 0
+[ -z "$choice" ] && exit 0
+
+if [[ "$choice" == img:* ]]; then
+    id=$(basename "${choice#img:}"); id=${id%%.*}
+else
+    id=${choice%%$'\t'*}
+fi
+printf '%s\t\n' "$id" | cliphist decode | wl-copy

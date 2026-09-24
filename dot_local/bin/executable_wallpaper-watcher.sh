@@ -3,6 +3,7 @@
 #  * при старте (логин): rice-apply --next (если ROTATE_ON_LOGIN=1), иначе текущие
 #  * раз в ROTATE_INTERVAL: rice-apply --next (проверка каждые 10 мин — переживает suspend)
 #  * событие monitoraddedv2 из .socket2.sock: ставим текущие обои на новый монитор
+export PATH="$HOME/.local/bin:$PATH"
 CONF="$HOME/.config/rice/rice.conf"
 [ -f "$CONF" ] && source "$CONF"
 ROTATE_INTERVAL="${ROTATE_INTERVAL:-86400}"
@@ -22,9 +23,9 @@ for _ in $(seq 1 30); do
 done
 
 if [ "$ROTATE_ON_LOGIN" = "1" ] || [ ! -e "$CUR" ]; then
-    rice-apply --next
+    "$HOME/.local/bin/rice-apply" --next
 else
-    rice-apply --reload
+    "$HOME/.local/bin/rice-apply" --reload
 fi
 
 # таймер ротации
@@ -32,7 +33,7 @@ fi
     while sleep 600; do
         last=$(cat "$CACHE/last-rotate" 2>/dev/null || echo 0)
         if [ $(( $(date +%s) - last )) -ge "$ROTATE_INTERVAL" ]; then
-            rice-apply --next >/dev/null
+            "$HOME/.local/bin/rice-apply" --next >/dev/null
         fi
     done
 ) &

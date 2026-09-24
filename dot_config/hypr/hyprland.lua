@@ -70,6 +70,8 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("swaync")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("/home/lain/.local/bin/wallpaper-watcher.sh")
+    hl.exec_cmd("wl-paste --type text --watch cliphist store")    -- история буфера
+    hl.exec_cmd("wl-paste --type image --watch cliphist store")
 end)
 
 -------------------------------
@@ -300,6 +302,11 @@ hl.bind("SUPER + H", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("pidof hyprlock || hyprlock"))   -- экран блокировки
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))           -- центр уведомлений
 hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -d -sw"))   -- DND вручную
+-- скриншоты: область → swappy (первый инструмент blur — замазать IP/хосты)
+hl.bind("Print",                     hl.dsp.exec_cmd("grimblast --freeze save area - | swappy -f -"))
+hl.bind(mainMod .. " + SHIFT + H",   hl.dsp.exec_cmd("grimblast --freeze save area - | swappy -f -"))
+hl.bind("SHIFT + Print",             hl.dsp.exec_cmd("grimblast --notify --freeze copysave area \"$HOME/photo/screenshots/shot-$(date +%Y%m%d-%H%M%S).png\""))
+hl.bind(mainMod .. " + V",           hl.dsp.exec_cmd("pkill -x wofi || /home/lain/.local/bin/rice-clip"))   -- история буфера
 
 
 
@@ -392,6 +399,13 @@ hl.layer_rule({ name = "blur-wlogout", match = { namespace = "^logout_dialog$" }
 -- overlayLayerRule:set_enabled(false)
 
 -- Hyprland-run windowrule
+hl.window_rule({
+    name  = "float-swappy",
+    match = { class = "^swappy$" },
+    float = true,
+    center = true,
+})
+
 hl.window_rule({
     name  = "move-hyprland-run",
     match = { class = "hyprland-run" },
