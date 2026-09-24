@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# rice-folder-icons — свои иконки (Papirus) для папок-закладок Nautilus.
+# Nautilus не умеет иконки на саму закладку, но показывает metadata::custom-icon-name папки
+# (и в сайдбаре, и в списке). Идемпотентно; запускается из rice-bootstrap.sh.
+set -u
+declare -A ICON=(
+    ["$HOME/magic"]=folder-network
+    ["$HOME/MagicVPNDocs"]=folder-remote
+    ["$HOME/magicdocs"]=folder-notes
+    ["$HOME/HomelabDocs"]=folder-script
+    ["$HOME/photo"]=folder-camera
+    ["$HOME/photo/screenshots"]=folder-image
+    ["$HOME/Pictures/Wallpapers"]=folder-pictures
+)
+for d in "${!ICON[@]}"; do
+    [ -d "$d" ] || continue
+    gio set -t string "$d" metadata::custom-icon-name "${ICON[$d]}" && echo "$d → ${ICON[$d]}"
+done

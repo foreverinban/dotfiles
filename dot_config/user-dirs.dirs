@@ -1,0 +1,12 @@
+# XDG user dirs под реальное использование (управляется chezmoi).
+# Документы → ~/magic (конфиги и доки Magic), изображения → ~/photo (стрит-фото, скриншоты).
+# Обои для rice лежат отдельно: ~/Pictures/Wallpapers (пул ротации).
+XDG_DESKTOP_DIR="$HOME/Desktop"
+XDG_DOWNLOAD_DIR="$HOME/Downloads"
+XDG_TEMPLATES_DIR="$HOME/Templates"
+XDG_PUBLICSHARE_DIR="$HOME/"
+XDG_DOCUMENTS_DIR="$HOME/magic"
+XDG_MUSIC_DIR="$HOME/"
+XDG_PICTURES_DIR="$HOME/photo"
+XDG_VIDEOS_DIR="$HOME/"
+XDG_PROJECTS_DIR="$HOME/"
