@@ -1,3 +1,25 @@
+export PATH=~/.npm-global/bin:$PATH
+
+# ── prompt: starship с палитрой из rice-render ────────────────────────────
+export STARSHIP_CONFIG="$HOME/.cache/rice/starship.toml"
+[ -f "$STARSHIP_CONFIG" ] || unset STARSHIP_CONFIG
 eval "$(starship init zsh)"
-export PATH=~/.npm-global/bin:$PATH
-export PATH=~/.npm-global/bin:$PATH
+
+# ── bat вместо cat (тема ansi = pywal), eza вместо ls ────────────────────
+if command -v bat >/dev/null; then
+    alias cat='bat --paging=never --style=plain'   # в пайпах bat ведёт себя как cat
+    alias bcat='bat'                                # с номерами строк и заголовком
+    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+fi
+if command -v eza >/dev/null; then
+    alias ls='eza --group-directories-first --icons=auto'
+    alias ll='eza -l --git --group-directories-first --icons=auto --time-style=long-iso'
+    alias la='eza -la --git --group-directories-first --icons=auto --time-style=long-iso'
+    alias lt='eza --tree --level=2 --icons=auto'
+fi
+
+# ── fastfetch-баннер из текущих обоев: только в новом окне kitty, не в панелях zellij
+if [[ -o interactive && "$TERM" == "xterm-kitty" && -z "$ZELLIJ" && -z "$RICE_FF_SHOWN" ]]; then
+    export RICE_FF_SHOWN=1
+    command -v fastfetch >/dev/null && [ -f ~/.cache/rice/fastfetch.jsonc ] && fastfetch -c ~/.cache/rice/fastfetch.jsonc
+fi

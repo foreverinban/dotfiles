@@ -1,0 +1,8 @@
+# тема "ansi" = 16 цветов терминала = текущая pywal-палитра (меняется вместе с обоями)
+--theme="ansi"
+--style="numbers,changes,header-filename"
+--italic-text=always
+--map-syntax="*.lua:Lua"
+--map-syntax="*.jsonc:JSON"
+--map-syntax="*.conf:INI"
+--map-syntax="*.kdl:Nix"
