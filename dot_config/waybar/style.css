@@ -1,23 +1,73 @@
 @import "../../.cache/wal/colors-waybar.css";
+/* единая палитра: @accent, @surface (= bg с OPACITY из rice.conf), @fg_dim ... */
 @import "../../.cache/rice/rice.css";
 
 * {
     font-family: "JetBrainsMono Nerd Font";
     font-size: 14px;
+    min-height: 0;
+    border: none;
 }
+
+/* сам бар прозрачный — видны только «острова» групп */
 window#waybar {
-    background-color: @background;
+    background-color: transparent;
+    color: @foreground;
+}
+
+tooltip {
+    background-color: @surface;
+    border: 1px solid @accent_dim;
+    border-radius: 10px;
+}
+tooltip label { color: @foreground; }
+
+/* ── группы-острова ─────────────────────────────── */
+#ws, #time, #net, #sys, #remote, #tray {
+    background-color: @surface;
+    border-radius: 10px;
+    padding: 0 6px;
+    margin: 0 4px;
+}
+.modules-left > widget:first-child > #ws { margin-left: 0; }
+.modules-right > widget:last-child > #tray { margin-right: 0; }
+
+/* ── модули ─────────────────────────────────────── */
+#network, #bluetooth, #cpu, #memory, #battery, #clock,
+#custom-uptime, #custom-zellij, #custom-weather {
+    color: @foreground;
+    padding: 0 6px;
+}
+
+#workspaces button {
+    color: @fg_dim;
+    background: transparent;
+    padding: 0 6px;
+    border-radius: 8px;
+    transition: all 150ms ease;
+}
+#workspaces button:hover {
+    background-color: @bg_alt2;
+    color: @foreground;
+    box-shadow: none;
 }
 #workspaces button.active {
     color: @accent;
+    box-shadow: inset 0 -2px @accent;
 }
-#network, #bluetooth, #cpu, #memory, #tray, #clock {
-    color: @foreground;
-    margin: 0 6px;
-    padding: 0 4px;
-}
+#workspaces button.urgent { color: @urgent; }
 
-#battery {
-    color: @accent;
-    padding: 0 10px;
-}
+#clock { color: @foreground; }
+#clock.utc { color: @fg_dim; }
+
+/* батарея — в едином accent */
+#battery { color: @accent; }
+#battery.warning:not(.charging) { color: @warn; }
+#battery.critical:not(.charging) { color: @urgent; }
+
+#custom-zellij { color: @accent; }
+#custom-uptime.ok { color: @foreground; }
+#custom-uptime.degraded { color: @warn; }
+#custom-uptime.down { color: @urgent; }
+
+#network.disconnected, #bluetooth.disabled { color: @muted; }

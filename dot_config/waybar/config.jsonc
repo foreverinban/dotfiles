@@ -2,14 +2,42 @@
     "layer": "top",
     "position": "top",
     "height": 32,
-    "modules-left": ["hyprland/workspaces"],
-    "modules-right": ["network", "bluetooth", "cpu", "memory", "tray", "battery", "clock"],
-    "clock": {
-        "format": "{:%d/%m/%Y %H:%M}"
+    "margin-top": 6,
+    "margin-left": 10,
+    "margin-right": 10,
+    "spacing": 0,
+
+    // группы модулей (стиль групп — #ws, #time, #net, #sys, #remote в style.css)
+    "modules-left":   ["group/ws"],
+    "modules-center": ["group/time"],
+    "modules-right":  ["group/net", "group/sys", "group/remote", "tray"],
+
+    "group/ws":     { "orientation": "horizontal", "modules": ["hyprland/workspaces", "custom/zellij"] },
+    "group/time":   { "orientation": "horizontal", "modules": ["clock", "clock#utc"] },
+    "group/net":    { "orientation": "horizontal", "modules": ["network", "bluetooth"] },
+    "group/sys":    { "orientation": "horizontal", "modules": ["cpu", "memory", "battery"] },
+    "group/remote": { "orientation": "horizontal", "modules": ["custom/uptime"] },
+
+    "hyprland/workspaces": {
+        "format": "{name}"
     },
+
+    // две таймзоны: локальная (системная) + UTC (время серверов)
+    "clock": {
+        "format": "{:%d/%m/%Y %H:%M}",
+        "tooltip-format": "<tt>{calendar}</tt>",
+        "calendar": { "mode": "month", "weeks-pos": "left" }
+    },
+    "clock#utc": {
+        "timezone": "Etc/UTC",
+        "format": "UTC {:%H:%M}",
+        "tooltip-format": "UTC {:%d/%m/%Y %H:%M:%S}"
+    },
+
     "battery": {
         "format": "BAT {capacity}%",
-        "format-charging": "CHG {capacity}%"
+        "format-charging": "CHG {capacity}%",
+        "states": { "warning": 25, "critical": 12 }
     },
     "cpu": {
         "format": "CPU {usage}%"
@@ -26,5 +54,22 @@
         "format": "BT",
         "format-connected": "BT {device_alias}",
         "format-disabled": "BT off"
-    }
+    },
+
+    "custom/uptime": {
+        "exec": "~/.local/bin/waybar-magic-uptime",
+        "return-type": "json",
+        "interval": 300,
+        "signal": 8,
+        "tooltip": true,
+        "on-click": "pkill -RTMIN+8 waybar"
+    },
+    "custom/zellij": {
+        "exec": "~/.local/bin/waybar-zellij",
+        "return-type": "json",
+        "interval": 5,
+        "on-click": "kitty -e sh -c 'zellij attach \"$(zellij ls -n | grep -v EXITED | head -1 | cut -d\" \" -f1)\"'"
+    },
+
+    "tray": { "spacing": 8 }
 }

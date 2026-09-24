@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# waybar custom/zellij — активные сессии zellij (EXITED не считаются).
+command -v zellij >/dev/null || { echo '{"text":""}'; exit 0; }
+mapfile -t active < <(zellij list-sessions --no-formatting 2>/dev/null | grep -v 'EXITED' | awk 'NF{print $1}')
+n=${#active[@]}
+if [ "$n" -eq 0 ]; then echo '{"text":"","class":"none"}'; exit 0; fi
+if [ "$n" -eq 1 ]; then text="ZJ ${active[0]}"; else text="ZJ $n"; fi
+jq -cn --arg t "$text" --arg tt "$(printf '%s\n' "${active[@]}")" '{text:$t, tooltip:$tt, class:"active"}'

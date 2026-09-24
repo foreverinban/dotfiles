@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# waybar custom/uptime — SSH-проверка аптайма Magic-нод.
+# Хосты: MAGIC_HOSTS из ~/.config/rice/rice.conf, иначе все Host из ~/.ssh/config.
+# Нужен ключ без пароля или ssh-agent: BatchMode не даёт ssh спрашивать пароль.
+CONF="$HOME/.config/rice/rice.conf"
+[ -f "$CONF" ] && source "$CONF"
+
+if [ -n "${MAGIC_HOSTS:-}" ]; then
+    hosts=$MAGIC_HOSTS
+else
+    hosts=$(grep -i '^Host ' ~/.ssh/config 2>/dev/null | awk '{print $2}' | grep -v '[*?]')
+fi
+[ -z "$hosts" ] && { echo '{"text":""}'; exit 0; }
+
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+for h in $hosts; do
+    ( ssh -n -o BatchMode=yes -o ConnectTimeout=4 -o ServerAliveInterval=2 -o ServerAliveCountMax=1 \
+          -o StrictHostKeyChecking=accept-new "$h" 'cut -d. -f1 /proc/uptime' \
+          >"$tmp/$h" 2>/dev/null || echo DOWN >"$tmp/$h" ) &
+done
+wait
+
+fmt() { local s=$1 d h m; d=$((s/86400)); h=$((s%86400/3600)); m=$((s%3600/60))
+        if [ $d -gt 0 ]; then echo "${d}d ${h}h"; elif [ $h -gt 0 ]; then echo "${h}h ${m}m"; else echo "${m}m"; fi; }
+
+total=0 up=0 tip=""
+for h in $hosts; do
+    total=$((total+1))
+    v=$(head -n1 "$tmp/$h")
+    if [[ "$v" =~ ^[0-9]+$ ]]; then
+        up=$((up+1)); tip+=$(printf '%-16s %s' "$h" "$(fmt "$v")")$'\n'
+    else
+        tip+=$(printf '%-16s %s' "$h" "DOWN")$'\n'
+    fi
+done
+
+if   [ $up -eq $total ]; then class=ok
+elif [ $up -eq 0 ];      then class=down
+else                          class=degraded; fi
+
+jq -cn --arg t "UP $up/$total" --arg tt "${tip%$'\n'}" --arg c "$class" \
+   '{text:$t, tooltip:$tt, class:$c, alt:$c}'
