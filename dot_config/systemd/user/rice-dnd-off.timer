@@ -1,0 +1,10 @@
+[Unit]
+Description=Фокус-работа: DND off
+
+[Timer]
+OnCalendar=Mon..Fri 13:00
+OnCalendar=Mon..Fri 18:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

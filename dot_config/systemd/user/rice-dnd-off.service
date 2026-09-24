@@ -1,0 +1,6 @@
+[Unit]
+Description=swaync: выключить Do Not Disturb (конец фокус-блока)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/swaync-client --dnd-off --skip-wait
