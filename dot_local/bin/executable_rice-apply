@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# rice-apply — сменить обои и прогнать единую палитру по всей системе.
+#   rice-apply <картинка>   конкретное изображение
+#   rice-apply --next       следующее из пула (по кругу)
+#   rice-apply --random     случайное из пула
+#   rice-apply --reload     перерендерить шаблоны с текущими обоями (без wal)
+set -uo pipefail
+
+CONF="$HOME/.config/rice/rice.conf"
+[ -f "$CONF" ] && source "$CONF"
+POOL_DIR="${POOL_DIR:-$HOME/Pictures/Wallpapers/pool}"
+CACHE="$HOME/.cache/rice"
+CUR="$CACHE/wallpaper"
+mkdir -p "$CACHE"
+
+exec 9>"$CACHE/.lock"
+flock -w 30 9 || { echo "rice-apply: занято другим процессом" >&2; exit 1; }
+
+pool() { find -L "$POOL_DIR" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | sort; }
+
+current_real() { [ -e "$CUR" ] && readlink -f "$CUR"; }
+
+pick_next() {
+    local cur list n i
+    cur=$(current_real)
+    mapfile -t list < <(pool)
+    n=${#list[@]}
+    [ "$n" -eq 0 ] && return 1
+    for i in "${!list[@]}"; do
+        if [ "$(readlink -f "${list[$i]}")" = "$cur" ]; then
+            echo "${list[$(( (i + 1) % n ))]}"; return 0
+        fi
+    done
+    echo "${list[0]}"
+}
+
+pick_random() {
+    local cur
+    cur=$(current_real)
+    pool | while read -r f; do [ "$(readlink -f "$f")" != "$cur" ] && echo "$f"; done | shuf -n1
+}
+
+mode="${1:---next}"
+case "$mode" in
+    --next)   img=$(pick_next) ;;
+    --random) img=$(pick_random); [ -z "$img" ] && img=$(pick_next) ;;
+    --reload) img=$(current_real) ;;
+    -h|--help) sed -n '2,7p' "$0"; exit 0 ;;
+    *)        img="$mode" ;;
+esac
+
+if [ -z "${img:-}" ] || [ ! -f "$img" ]; then
+    echo "rice-apply: нет изображения (пул пуст? $POOL_DIR)" >&2; exit 1
+fi
+img=$(readlink -f "$img")
+
+# 1. палитра pywal (-n: обои ставит hyprpaper, не wal)
+if [ "$mode" != "--reload" ]; then
+    wal -q -n -i "$img" || { echo "rice-apply: wal упал" >&2; exit 1; }
+    ln -sfn "$img" "$CUR"
+    date +%s > "$CACHE/last-rotate"
+fi
+
+# 2. наши шаблоны (единый accent, прозрачность, lua/css/conf)
+rice-render || echo "rice-render: ошибка" >&2
+
+# 3. обои на все мониторы
+if command -v hyprctl >/dev/null && [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+    for m in $(hyprctl monitors -j | jq -r '.[].name'); do
+        hyprctl hyprpaper wallpaper "$m,$img,cover" >/dev/null 2>&1
+    done
+    # 4. рамка/цвета Hyprland (hyprland.lua читает ~/.cache/rice/colors.lua)
+    hyprctl reload >/dev/null 2>&1
+fi
+
+# 5. живые приложения
+pkill -USR2 -x waybar 2>/dev/null                              # waybar: перечитать стиль
+command -v swaync-client >/dev/null && swaync-client -rs >/dev/null 2>&1
+pkill -USR1 -x kitty 2>/dev/null                               # kitty: opacity + tab bar
+for s in "${XDG_RUNTIME_DIR:-/run/user/$UID}"/nvim.*.0; do     # neovim: :PywalRestore
+    [ -S "$s" ] && timeout 2 nvim --server "$s" --remote-send '<Cmd>PywalRestore<CR>' >/dev/null 2>&1
+done
+command -v pywalfox >/dev/null && pywalfox update >/dev/null 2>&1
+
+# 6. SDDM (каталог создаёт rice-bootstrap.sh с правами пользователя)
+SDDM_DIR=/var/lib/rice-sddm
+if [ -d "$SDDM_DIR" ] && [ -w "$SDDM_DIR" ]; then
+    cp -f "$CACHE/sddm.conf.user" "$SDDM_DIR/astronaut.conf.user" 2>/dev/null
+    if command -v magick >/dev/null; then
+        magick "$img" -resize '2560x2560>' -quality 90 "$SDDM_DIR/background.jpg" 2>/dev/null
+    else
+        cp -f "$img" "$SDDM_DIR/background.jpg"
+    fi
+    chmod 644 "$SDDM_DIR"/* 2>/dev/null
+fi
+
+echo "rice-apply: $(basename "$img") · accent $(cat "$CACHE/accent" 2>/dev/null)"

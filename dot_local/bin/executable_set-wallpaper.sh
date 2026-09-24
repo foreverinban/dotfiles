@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-sleep 20
-hyprctl hyprpaper preload "/home/lain/Pictures/Wallpapers/blame3.jpg"
-sleep 0.3
-hyprctl hyprpaper wallpaper "eDP-1,/home/lain/Pictures/Wallpapers/blame3.jpg"
-hyprctl hyprpaper wallpaper "DP-2,/home/lain/Pictures/Wallpapers/blame3.jpg"
+# Устарело: обои и палитру теперь ставит rice-apply. Оставлено как совместимая обёртка.
+#   set-wallpaper.sh            -> переприменить текущие
+#   set-wallpaper.sh <картинка> -> поставить конкретную
+exec "$HOME/.local/bin/rice-apply" "${1:---reload}"

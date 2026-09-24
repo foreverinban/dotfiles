@@ -26,3 +26,7 @@ vim.api.nvim_create_autocmd("FileType", {
     pcall(vim.treesitter.stop)
   end,
 })
+
+-- единая палитра системы (:PywalRestore)
+local rice = require("rice")
+vim.api.nvim_create_autocmd("VimEnter", { once = true, callback = rice.apply })

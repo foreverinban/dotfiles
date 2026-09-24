@@ -1,0 +1,6 @@
+# файлы репозитория, не раскладываются в $HOME
+README.md
+install.sh
+rice-bootstrap.sh
+packages.txt
+aur-packages.txt

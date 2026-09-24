@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+"""rice-render — рендерит ~/.config/rice/templates/* в ~/.cache/rice/*
+из текущей палитры pywal (~/.cache/wal/colors.json) + ~/.config/rice/rice.conf.
+
+Плейсхолдеры: {{name}}. Для каждого цвета доступны варианты:
+  {{accent}}      -> #7a8fa6
+  {{accent_x}}    -> 7a8fa6        (hyprland rgba(), hyprlock rgb())
+  {{accent_rgb}}  -> 122, 143, 166 (css rgba())
+  {{accent_ansi}} -> 38;2;122;143;166 (fastfetch)
+Прочее: {{opacity}} {{opacity_pct}} {{opacity_hex}} {{wallpaper}} {{font}} {{home}}
+"""
+import json, os, re, shutil, subprocess, sys
+
+HOME = os.path.expanduser("~")
+WAL = os.path.join(HOME, ".cache/wal/colors.json")
+CONF = os.path.join(HOME, ".config/rice/rice.conf")
+TPL_DIR = os.path.join(HOME, ".config/rice/templates")
+OUT = os.path.join(HOME, ".cache/rice")
+FONT = "JetBrainsMono Nerd Font"
+
+
+def read_conf(path):
+    conf = {}
+    try:
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                v = v.strip().strip('"').strip("'")
+                conf[k.strip()] = os.path.expandvars(v)
+    except FileNotFoundError:
+        pass
+    return conf
+
+
+def hex2rgb(h):
+    h = h.lstrip("#")
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def rgb2hex(c):
+    return "#%02x%02x%02x" % tuple(max(0, min(255, round(v))) for v in c)
+
+
+def mix(a, b, t):
+    """t=0 -> a, t=1 -> b"""
+    ra, rb = hex2rgb(a), hex2rgb(b)
+    return rgb2hex([ra[i] + (rb[i] - ra[i]) * t for i in range(3)])
+
+
+def lum(h):
+    def ch(v):
+        v /= 255
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = (ch(v) for v in hex2rgb(h))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast(a, b):
+    la, lb = sorted((lum(a), lum(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+
+def ensure_contrast(color, bg, minimum, toward="#e6e9ef"):
+    t = 0.0
+    c = color
+    while contrast(c, bg) < minimum and t < 1.0:
+        t += 0.05
+        c = mix(color, toward, t)
+    return c
+
+
+def build_vars():
+    conf = read_conf(CONF)
+    with open(WAL) as f:
+        wal = json.load(f)
+    sp, cols = wal["special"], wal["colors"]
+    colors = {k: v.lower() for k, v in cols.items()}
+    bg, fg = sp["background"].lower(), sp["foreground"].lower()
+    colors.update(bg=bg, fg=fg, cursor=sp.get("cursor", fg).lower())
+
+    slot = conf.get("ACCENT_SLOT", "color4")
+    if slot not in colors:
+        print(f"rice-render: ACCENT_SLOT={slot} неизвестен, беру color4", file=sys.stderr)
+        slot = "color4"
+    minc = float(conf.get("ACCENT_MIN_CONTRAST", "3.0"))
+    accent = ensure_contrast(colors[slot], bg, minc)
+
+    colors.update(
+        accent=accent,
+        accent_dim=mix(accent, bg, 0.45),
+        bg_alt=mix(bg, fg, 0.06),
+        bg_alt2=mix(bg, fg, 0.12),
+        fg_dim=mix(fg, bg, 0.35),
+        muted=ensure_contrast(colors["color8"], bg, 2.0),
+        ok=ensure_contrast(colors["color2"], bg, minc),
+        warn=ensure_contrast(colors["color3"], bg, minc),
+        urgent=ensure_contrast(colors["color1"], bg, minc),
+    )
+
+    v = {}
+    for k, h in colors.items():
+        r, g, b = hex2rgb(h)
+        v[k] = h
+        v[k + "_x"] = h.lstrip("#")
+        v[k + "_rgb"] = f"{r}, {g}, {b}"
+        v[k + "_ansi"] = f"38;2;{r};{g};{b}"
+
+    op = float(conf.get("OPACITY", "0.86"))
+    v.update(
+        opacity=f"{op:.2f}",
+        opacity_pct=str(round(op * 100)),
+        opacity_hex="%02x" % round(op * 255),
+        wallpaper=wal.get("wallpaper", ""),
+        font=FONT,
+        home=HOME,
+        accent_slot=slot,
+    )
+    return v
+
+
+PH = re.compile(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}")
+
+
+def render_all(v):
+    os.makedirs(OUT, exist_ok=True)
+    if not os.path.isdir(TPL_DIR):
+        return
+    for name in sorted(os.listdir(TPL_DIR)):
+        src = os.path.join(TPL_DIR, name)
+        if not os.path.isfile(src):
+            continue
+        with open(src) as f:
+            data = f.read()
+        missing = set()
+
+        def sub(m):
+            key = m.group(1)
+            if key in v:
+                return v[key]
+            missing.add(key)
+            return m.group(0)
+
+        out = PH.sub(sub, data)
+        if missing:
+            print(f"rice-render: {name}: неизвестные ключи {sorted(missing)}", file=sys.stderr)
+        tmp = os.path.join(OUT, "." + name + ".tmp")
+        with open(tmp, "w") as f:
+            f.write(out)
+        os.replace(tmp, os.path.join(OUT, name))
+
+
+RAMP = " .,:;-=+*#%@"
+
+
+def ascii_logo(v, cols=34, rows=15):
+    """ASCII-баннер для fastfetch из текущих обоев (яркость -> символ, цвет muted->accent)."""
+    img = v.get("wallpaper")
+    if not img or not os.path.exists(img):
+        return
+    tool = shutil.which("magick") or shutil.which("convert")
+    if not tool:
+        return
+    try:
+        raw = subprocess.run(
+            [tool, img, "-gravity", "center", "-crop", "62%x100%+0+0", "+repage",
+             "-colorspace", "Gray", "-resize", f"{cols}x{rows}!", "-normalize",
+             "-depth", "8", "gray:-"],
+            capture_output=True, check=True, timeout=30).stdout
+    except Exception as e:  # noqa
+        print(f"rice-render: ascii logo: {e}", file=sys.stderr)
+        return
+    if len(raw) < cols * rows:
+        return
+    lo, hi = v["muted"], v["accent"]
+    top = v["fg"]
+    lines = []
+    for y in range(rows):
+        line = ""
+        for x in range(cols):
+            p = raw[y * cols + x] / 255
+            ch = RAMP[min(len(RAMP) - 1, int(p * len(RAMP)))]
+            c = mix(lo, hi, min(1, p * 1.4)) if p < 0.8 else mix(hi, top, (p - 0.8) * 5)
+            r, g, b = hex2rgb(c)
+            line += f"\033[38;2;{r};{g};{b}m{ch}"
+        lines.append(line + "\033[0m")
+    with open(os.path.join(OUT, "logo.txt"), "w") as f:
+        f.write("\n".join(lines) + "\n")
+
+
+def main():
+    if not os.path.exists(WAL):
+        sys.exit("rice-render: нет ~/.cache/wal/colors.json — сначала wal -i <картинка>")
+    v = build_vars()
+    render_all(v)
+    ascii_logo(v)
+    with open(os.path.join(OUT, "accent"), "w") as f:
+        f.write(v["accent"] + "\n")
+    print(f"rice-render: accent={v['accent']} ({v['accent_slot']}), opacity={v['opacity']}")
+
+
+if __name__ == "__main__":
+    main()

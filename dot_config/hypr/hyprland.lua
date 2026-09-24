@@ -33,7 +33,21 @@ hl.monitor({
     mode     = "preferred",
     position = "auto",
     scale    = "auto",
-})---------------------
+})
+
+-----------------
+---- PALETTE ----
+-----------------
+
+-- Единая палитра: ~/.cache/rice/colors.lua генерирует rice-render из pywal
+-- (rice-apply делает hyprctl reload после смены обоев). Фолбэк — сине-серый.
+local rice = (function()
+    local ok, c = pcall(function() return dofile(os.getenv("HOME") .. "/.cache/rice/colors.lua") end)
+    if ok and type(c) == "table" then return c end
+    return { accent_x = "7f95ad", accent_dim_x = "4a5563", muted_x = "4b5058", bg_x = "15181d", urgent_x = "c26a6a" }
+end)()
+
+---------------------
 ---- MY PROGRAMS ----
 ---------------------
 
@@ -66,6 +80,7 @@ end)
 
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")   -- Qt-приложения берут палитру из ~/.cache/rice/qt-colors.conf
 
 
 -----------------------
@@ -99,9 +114,10 @@ hl.config({
 
         border_size = 2,
 
+        -- тонкая рамка активного окна в едином accent (rice.conf: ACCENT_SLOT)
         col = {
-            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
-            inactive_border = "rgba(595959aa)",
+            active_border   = "rgba(" .. rice.accent_x .. "ee)",
+            inactive_border = "rgba(" .. rice.muted_x .. "66)",
         },
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps

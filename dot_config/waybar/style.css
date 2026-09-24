@@ -1,4 +1,5 @@
 @import "../../.cache/wal/colors-waybar.css";
+@import "../../.cache/rice/rice.css";
 
 * {
     font-family: "JetBrainsMono Nerd Font";
@@ -8,7 +9,7 @@ window#waybar {
     background-color: @background;
 }
 #workspaces button.active {
-    color: @color2;
+    color: @accent;
 }
 #network, #bluetooth, #cpu, #memory, #tray, #clock {
     color: @foreground;
@@ -17,11 +18,6 @@ window#waybar {
 }
 
 #battery {
-    color: @foreground;
-    padding: 0 10px;
-}
-
-#battery {
-    color: @foreground;
+    color: @accent;
     padding: 0 10px;
 }
