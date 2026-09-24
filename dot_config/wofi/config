@@ -1,0 +1,14 @@
+show=drun
+allow_images=true
+image_size=26
+allow_markup=true
+insensitive=true
+no_actions=true
+width=560
+height=380
+location=center
+prompt=run
+term=kitty
+hide_scroll=true
+matching=fuzzy
+key_expand=Tab
