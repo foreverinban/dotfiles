@@ -2,7 +2,7 @@ return {
   {
     "neovim/nvim-lspconfig",
     config = function()
-      vim.lsp.enable({ "pyright", "bashls" })
+      vim.lsp.enable({ "pyright", "bashls", "html", "cssls", "emmet_ls" })
     end,
   },
   {
@@ -26,8 +26,8 @@ return {
     build = ":TSUpdate",
     config = function()
       require("nvim-treesitter.configs").setup({
-        ensure_installed = { "python", "bash", "lua" },
-        highlight = { enable = true },
+        ensure_installed = { "python", "bash", "lua", "html", "css" },
+        highlight = { enable = true, disable = { "markdown" } },
       })
     end,
   },
@@ -38,6 +38,8 @@ return {
         formatters_by_ft = {
           python = { "black" },
           sh = { "shfmt" },
+          html = { "prettier" },
+          css = { "prettier" },
         },
         format_on_save = { timeout_ms = 3000 },
       })

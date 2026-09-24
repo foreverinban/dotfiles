@@ -15,3 +15,13 @@ window#waybar {
     margin: 0 6px;
     padding: 0 4px;
 }
+
+#battery {
+    color: @foreground;
+    padding: 0 10px;
+}
+
+#battery {
+    color: @foreground;
+    padding: 0 10px;
+}

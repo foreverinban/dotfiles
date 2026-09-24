@@ -3,9 +3,13 @@
     "position": "top",
     "height": 32,
     "modules-left": ["hyprland/workspaces"],
-    "modules-right": ["network", "bluetooth", "cpu", "memory", "tray", "clock"],
+    "modules-right": ["network", "bluetooth", "cpu", "memory", "tray", "battery", "clock"],
     "clock": {
         "format": "{:%d/%m/%Y %H:%M}"
+    },
+    "battery": {
+        "format": "BAT {capacity}%",
+        "format-charging": "CHG {capacity}%"
     },
     "cpu": {
         "format": "CPU {usage}%"
