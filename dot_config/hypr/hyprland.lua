@@ -35,6 +35,28 @@ hl.monitor({
     scale    = "auto",
 })
 
+---------------
+---- INPUT ----
+---------------
+
+hl.config({
+    input = {
+        kb_layout  = "us, ru",
+        kb_variant = "",
+        kb_model   = "",
+        kb_options = "grp:caps_toggle",
+        kb_rules   = "",
+
+        follow_mouse = 1,
+
+        sensitivity = 0, -- -1.0 - 1.0, 0 means no modification.
+
+        touchpad = {
+            natural_scroll = false,
+        },
+    },
+})
+
 -----------------
 ---- PALETTE ----
 -----------------
@@ -46,6 +68,14 @@ local rice = (function()
     if ok and type(c) == "table" then return c end
     return { accent_x = "7f95ad", accent_dim_x = "4a5563", muted_x = "4b5058", bg_x = "15181d", urgent_x = "c26a6a" }
 end)()
+
+-- try(): ошибка одного вызова hl.* не должна обрывать весь конфиг
+-- (иначе не доходим до input/binds: отваливаются раскладка по Caps и хоткеи)
+local function try(fn, ...)
+    local ok, err = pcall(fn, ...)
+    if not ok then print("hyprland.lua: " .. tostring(err)) end
+    return ok
+end
 
 ---------------------
 ---- MY PROGRAMS ----
@@ -161,37 +191,39 @@ hl.config({
 })
 
 -- Default curves and animations, see https://wiki.hypr.land/Configuring/Advanced-and-Cool/Animations/
-hl.curve("easeOutQuint",   { type = "bezier", points = { {0.23, 1},    {0.32, 1}    } })
-hl.curve("easeInOutCubic", { type = "bezier", points = { {0.65, 0.05}, {0.36, 1}    } })
-hl.curve("linear",         { type = "bezier", points = { {0, 0},       {1, 1}       } })
-hl.curve("almostLinear",   { type = "bezier", points = { {0.5, 0.5},   {0.75, 1}    } })
-hl.curve("quick",          { type = "bezier", points = { {0.15, 0},    {0.1, 1}     } })
+try(hl.curve, "easeOutQuint",   { type = "bezier", points = { {0.23, 1},    {0.32, 1}    } })
+try(hl.curve, "easeInOutCubic", { type = "bezier", points = { {0.65, 0.05}, {0.36, 1}    } })
+try(hl.curve, "linear",         { type = "bezier", points = { {0, 0},       {1, 1}       } })
+try(hl.curve, "almostLinear",   { type = "bezier", points = { {0.5, 0.5},   {0.75, 1}    } })
+try(hl.curve, "quick",          { type = "bezier", points = { {0.15, 0},    {0.1, 1}     } })
 -- rice: резкий профиль для рабочих столов, мягкий — для окон
-hl.curve("wsSnap",         { type = "bezier", points = { {0.05, 0.9},  {0.1, 1}     } })
-hl.curve("winSmooth",      { type = "bezier", points = { {0.16, 1},    {0.3, 1}     } })
+try(hl.curve, "wsSnap",         { type = "bezier", points = { {0.05, 0.9},  {0.1, 1}     } })
+try(hl.curve, "winSmooth",      { type = "bezier", points = { {0.16, 1},    {0.3, 1}     } })
 
 -- Default springs
-hl.curve("easy",           { type = "spring", mass = 1, stiffness = 238.1191, dampening = 24.21279333 })
+if not try(hl.curve, "easy", { type = "spring", mass = 1, stiffness = 238.1191, damping = 24.21279333 }) then
+    try(hl.curve, "easy", { type = "spring", mass = 1, stiffness = 238.1191, dampening = 24.21279333 })
+end
 
-hl.animation({ leaf = "global",        enabled = true,  speed = 10,   bezier = "default" })
-hl.animation({ leaf = "border",        enabled = true,  speed = 5.39, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windows",       enabled = true,  speed = 4.79, spring = "easy" })
-hl.animation({ leaf = "windowsIn",     enabled = true,  speed = 5,    bezier = "winSmooth",    style = "popin 90%" })   -- плавное открытие
-hl.animation({ leaf = "windowsOut",    enabled = true,  speed = 1.49, bezier = "linear",       style = "popin 87%" })
-hl.animation({ leaf = "fadeIn",        enabled = true,  speed = 1.73, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut",       enabled = true,  speed = 1.46, bezier = "almostLinear" })
-hl.animation({ leaf = "fade",          enabled = true,  speed = 3.03, bezier = "quick" })
-hl.animation({ leaf = "layers",        enabled = true,  speed = 3.81, bezier = "easeOutQuint" })
-hl.animation({ leaf = "layersIn",      enabled = true,  speed = 4,    bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersOut",     enabled = true,  speed = 1.5,  bezier = "linear",       style = "fade" })
-hl.animation({ leaf = "fadeLayersIn",  enabled = true,  speed = 1.79, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeLayersOut", enabled = true,  speed = 1.39, bezier = "almostLinear" })
+try(hl.animation, { leaf = "global",        enabled = true,  speed = 10,   bezier = "default" })
+try(hl.animation, { leaf = "border",        enabled = true,  speed = 5.39, bezier = "easeOutQuint" })
+try(hl.animation, { leaf = "windows",       enabled = true,  speed = 4.79, spring = "easy" })
+try(hl.animation, { leaf = "windowsIn",     enabled = true,  speed = 5,    bezier = "winSmooth",    style = "popin 90%" })   -- плавное открытие
+try(hl.animation, { leaf = "windowsOut",    enabled = true,  speed = 1.49, bezier = "linear",       style = "popin 87%" })
+try(hl.animation, { leaf = "fadeIn",        enabled = true,  speed = 1.73, bezier = "almostLinear" })
+try(hl.animation, { leaf = "fadeOut",       enabled = true,  speed = 1.46, bezier = "almostLinear" })
+try(hl.animation, { leaf = "fade",          enabled = true,  speed = 3.03, bezier = "quick" })
+try(hl.animation, { leaf = "layers",        enabled = true,  speed = 3.81, bezier = "easeOutQuint" })
+try(hl.animation, { leaf = "layersIn",      enabled = true,  speed = 4,    bezier = "easeOutQuint", style = "fade" })
+try(hl.animation, { leaf = "layersOut",     enabled = true,  speed = 1.5,  bezier = "linear",       style = "fade" })
+try(hl.animation, { leaf = "fadeLayersIn",  enabled = true,  speed = 1.79, bezier = "almostLinear" })
+try(hl.animation, { leaf = "fadeLayersOut", enabled = true,  speed = 1.39, bezier = "almostLinear" })
 -- рабочие столы: короткий резкий slidefade
-hl.animation({ leaf = "workspaces",    enabled = true,  speed = 2.2,  bezier = "wsSnap",       style = "slidefade 12%" })
-hl.animation({ leaf = "workspacesIn",  enabled = true,  speed = 2.2,  bezier = "wsSnap",       style = "slidefade 12%" })
-hl.animation({ leaf = "workspacesOut", enabled = true,  speed = 2.2,  bezier = "wsSnap",       style = "slidefade 12%" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3,  bezier = "winSmooth",    style = "slidefadevert 20%" })
-hl.animation({ leaf = "zoomFactor",    enabled = true,  speed = 7,    bezier = "quick" })
+try(hl.animation, { leaf = "workspaces",    enabled = true,  speed = 2.2,  bezier = "wsSnap",       style = "slidefade 12%" })
+try(hl.animation, { leaf = "workspacesIn",  enabled = true,  speed = 2.2,  bezier = "wsSnap",       style = "slidefade 12%" })
+try(hl.animation, { leaf = "workspacesOut", enabled = true,  speed = 2.2,  bezier = "wsSnap",       style = "slidefade 12%" })
+try(hl.animation, { leaf = "specialWorkspace", enabled = true, speed = 3,  bezier = "winSmooth",    style = "slidefadevert 20%" })
+try(hl.animation, { leaf = "zoomFactor",    enabled = true,  speed = 7,    bezier = "quick" })
 
 -- Ref https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 -- "Smart gaps" / "No gaps when only"
@@ -244,29 +276,7 @@ hl.config({
 })
 
 
----------------
----- INPUT ----
----------------
-
-hl.config({
-    input = {
-        kb_layout  = "us, ru",
-        kb_variant = "",
-        kb_model   = "",
-        kb_options = "grp:caps_toggle",
-        kb_rules   = "",
-
-        follow_mouse = 1,
-
-        sensitivity = 0, -- -1.0 - 1.0, 0 means no modification.
-
-        touchpad = {
-            natural_scroll = false,
-        },
-    },
-})
-
-hl.gesture({
+try(hl.gesture, {
     fingers = 3,
     direction = "horizontal",
     action = "workspace"
@@ -287,79 +297,79 @@ hl.device({
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
-hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
+try(hl.bind, mainMod .. " + T", hl.dsp.exec_cmd(terminal))
 local closeWindowBind = hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
-hl.bind(mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
-hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
+try(hl.bind, mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
+try(hl.bind, mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
+try(hl.bind, mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }))
+try(hl.bind, mainMod .. " + R", hl.dsp.exec_cmd(menu))
+try(hl.bind, mainMod .. " + P", hl.dsp.window.pseudo())
+try(hl.bind, mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 --hl.bind(mainmod .. " + H", hl.dsp.exec_cmd([[grim -g "$(slurp)" - | wl-copy]]))
-hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))
-hl.bind("SUPER + H", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("pidof hyprlock || hyprlock"))   -- экран блокировки
-hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))           -- центр уведомлений
-hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -d -sw"))   -- DND вручную
+try(hl.bind, mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))
+try(hl.bind, "SUPER + H", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+try(hl.bind, mainMod .. " + L", hl.dsp.exec_cmd("pidof hyprlock || hyprlock"))   -- экран блокировки
+try(hl.bind, mainMod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))           -- центр уведомлений
+try(hl.bind, mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -d -sw"))   -- DND вручную
 -- скриншоты: область → swappy (первый инструмент blur — замазать IP/хосты)
-hl.bind("Print",                     hl.dsp.exec_cmd("grimblast --freeze save area - | swappy -f -"))
-hl.bind(mainMod .. " + SHIFT + H",   hl.dsp.exec_cmd("grimblast --freeze save area - | swappy -f -"))
-hl.bind("SHIFT + Print",             hl.dsp.exec_cmd("grimblast --notify --freeze copysave area \"$HOME/photo/screenshots/shot-$(date +%Y%m%d-%H%M%S).png\""))
-hl.bind(mainMod .. " + V",           hl.dsp.exec_cmd("pkill -x wofi || /home/lain/.local/bin/rice-clip"))   -- история буфера
-hl.bind(mainMod .. " + Escape",      hl.dsp.exec_cmd("pkill -x wlogout || wlogout -b 5 -T 380 -B 380"))   -- power menu
-hl.bind(mainMod .. " + SHIFT + B",   hl.dsp.exec_cmd("kitty --class btop -e btop"))                     -- btop в отдельном окне
-hl.bind(mainMod .. " + SHIFT + W",   hl.dsp.exec_cmd("/home/lain/.local/bin/rice-apply --next"))          -- следующие обои + палитра
+try(hl.bind, "Print",                     hl.dsp.exec_cmd("grimblast --freeze save area - | swappy -f -"))
+try(hl.bind, mainMod .. " + SHIFT + H",   hl.dsp.exec_cmd("grimblast --freeze save area - | swappy -f -"))
+try(hl.bind, "SHIFT + Print",             hl.dsp.exec_cmd("grimblast --notify --freeze copysave area \"$HOME/photo/screenshots/shot-$(date +%Y%m%d-%H%M%S).png\""))
+try(hl.bind, mainMod .. " + V",           hl.dsp.exec_cmd("pkill -x wofi || /home/lain/.local/bin/rice-clip"))   -- история буфера
+try(hl.bind, mainMod .. " + Escape",      hl.dsp.exec_cmd("pkill -x wlogout || wlogout -b 5 -T 380 -B 380"))   -- power menu
+try(hl.bind, mainMod .. " + SHIFT + B",   hl.dsp.exec_cmd("kitty --class btop -e btop"))                     -- btop в отдельном окне
+try(hl.bind, mainMod .. " + SHIFT + W",   hl.dsp.exec_cmd("/home/lain/.local/bin/rice-apply --next"))          -- следующие обои + палитра
 
 
 
 -- Move focus with mainMod + arrow keys
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
+try(hl.bind, mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
+try(hl.bind, mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
+try(hl.bind, mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
+try(hl.bind, mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0
-    hl.bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}))
-    hl.bind(mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }))
+    try(hl.bind, mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}))
+    try(hl.bind, mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }))
 end
 
 -- Example special workspace (scratchpad)
-hl.bind(mainMod .. " + S",         hl.dsp.workspace.toggle_special("magic"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
+try(hl.bind, mainMod .. " + S",         hl.dsp.workspace.toggle_special("magic"))
+try(hl.bind, mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
 -- Scroll through existing workspaces with mainMod + scroll
-hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
+try(hl.bind, mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
+try(hl.bind, mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+try(hl.bind, mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
+try(hl.bind, mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- Fn-ряд ThinkPad (F1–F12). Действие + OSD в swaync: ~/.local/bin/rice-osd
 -- Если вместо них приходят F1..F12 — выключен/включён Fn Lock: Fn+Esc.
 local osd = "/home/lain/.local/bin/rice-osd"
-hl.bind("XF86AudioMute",         hl.dsp.exec_cmd(osd .. " vol mute"),  { locked = true })                     -- F1
-hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd(osd .. " vol down"),  { locked = true, repeating = true })   -- F2
-hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd(osd .. " vol up"),    { locked = true, repeating = true })   -- F3
-hl.bind("XF86AudioMicMute",      hl.dsp.exec_cmd(osd .. " mic"),       { locked = true })                     -- F4
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(osd .. " bri down"),  { locked = true, repeating = true })   -- F5
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(osd .. " bri up"),    { locked = true, repeating = true })   -- F6
-hl.bind("XF86Display",           hl.dsp.exec_cmd("pkill -x nwg-displays || nwg-displays"))                 -- F7
+try(hl.bind, "XF86AudioMute",         hl.dsp.exec_cmd(osd .. " vol mute"),  { locked = true })                     -- F1
+try(hl.bind, "XF86AudioLowerVolume",  hl.dsp.exec_cmd(osd .. " vol down"),  { locked = true, repeating = true })   -- F2
+try(hl.bind, "XF86AudioRaiseVolume",  hl.dsp.exec_cmd(osd .. " vol up"),    { locked = true, repeating = true })   -- F3
+try(hl.bind, "XF86AudioMicMute",      hl.dsp.exec_cmd(osd .. " mic"),       { locked = true })                     -- F4
+try(hl.bind, "XF86MonBrightnessDown", hl.dsp.exec_cmd(osd .. " bri down"),  { locked = true, repeating = true })   -- F5
+try(hl.bind, "XF86MonBrightnessUp",   hl.dsp.exec_cmd(osd .. " bri up"),    { locked = true, repeating = true })   -- F6
+try(hl.bind, "XF86Display",           hl.dsp.exec_cmd("pkill -x nwg-displays || nwg-displays"))                 -- F7
 -- F8 (XF86WLAN / RFKill) обрабатывает ядро (thinkpad_acpi + rfkill) — бинд не нужен
-hl.bind("XF86Tools",             hl.dsp.exec_cmd("pkill -x nwg-look || nwg-look"))                         -- F9
-hl.bind("XF86Bluetooth",         hl.dsp.exec_cmd(osd .. " bt"))                                            -- F10
-hl.bind("XF86Keyboard",          hl.dsp.exec_cmd(menu))                                                    -- F11
-hl.bind("XF86Favorites",         hl.dsp.exec_cmd("/home/lain/.local/bin/rice-apply --next"))                -- F12
+try(hl.bind, "XF86Tools",             hl.dsp.exec_cmd("pkill -x nwg-look || nwg-look"))                         -- F9
+try(hl.bind, "XF86Bluetooth",         hl.dsp.exec_cmd(osd .. " bt"))                                            -- F10
+try(hl.bind, "XF86Keyboard",          hl.dsp.exec_cmd(menu))                                                    -- F11
+try(hl.bind, "XF86Favorites",         hl.dsp.exec_cmd("/home/lain/.local/bin/rice-apply --next"))                -- F12
 
 -- медиа (playerctl)
-hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
+try(hl.bind, "XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
+try(hl.bind, "XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+try(hl.bind, "XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
+try(hl.bind, "XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
 
 
 --------------------------------
@@ -396,10 +406,10 @@ hl.window_rule({
 })
 
 -- rice: blur под полупрозрачными слоями (прозрачность = rice.conf OPACITY)
-hl.layer_rule({ name = "blur-waybar", match = { namespace = "^waybar$" }, blur = true, ignore_alpha = 0.3 })
-hl.layer_rule({ name = "blur-wofi",   match = { namespace = "^wofi$" },   blur = true, ignore_alpha = 0.3, animation = "popin 92%" })
-hl.layer_rule({ name = "blur-swaync", match = { namespace = "^swaync-(control-center|notification-window)$" }, blur = true, ignore_alpha = 0.3 })
-hl.layer_rule({ name = "blur-wlogout", match = { namespace = "^logout_dialog$" }, blur = true })
+try(hl.layer_rule, { name = "blur-waybar", match = { namespace = "^waybar$" }, blur = true, ignore_alpha = 0.3 })
+try(hl.layer_rule, { name = "blur-wofi",   match = { namespace = "^wofi$" },   blur = true, ignore_alpha = 0.3, animation = "popin 92%" })
+try(hl.layer_rule, { name = "blur-swaync", match = { namespace = "^swaync-(control-center|notification-window)$" }, blur = true, ignore_alpha = 0.3 })
+try(hl.layer_rule, { name = "blur-wlogout", match = { namespace = "^logout_dialog$" }, blur = true })
 
 -- Layer rules also return a handle.
 -- local overlayLayerRule = hl.layer_rule({
@@ -410,7 +420,7 @@ hl.layer_rule({ name = "blur-wlogout", match = { namespace = "^logout_dialog$" }
 -- overlayLayerRule:set_enabled(false)
 
 -- Hyprland-run windowrule
-hl.window_rule({
+try(hl.window_rule, {
     name  = "float-btop",
     match = { class = "^btop$" },
     float = true,
@@ -418,7 +428,7 @@ hl.window_rule({
     size  = { "(monitor_w*0.7)", "(monitor_h*0.7)" },
 })
 
-hl.window_rule({
+try(hl.window_rule, {
     name  = "float-swappy",
     match = { class = "^swappy$" },
     float = true,
