@@ -18,6 +18,8 @@ RICE_PKGS=(
   swaync libnotify papirus-icon-theme papirus-folders python-pipx nodejs npm
   # этап 11–12 — скриншоты, буфер, power menu
   grimblast-git swappy cliphist wl-clipboard wlogout btop
+  # Fn-ряд ThinkPad
+  brightnessctl playerctl bluez-utils
 )
 say "Пакеты"
 # ставим только то, чего нет (pacman -T учитывает provides: adw-gtk-theme-git и т.п.)

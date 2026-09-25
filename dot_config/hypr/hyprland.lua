@@ -339,15 +339,23 @@ hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
--- Laptop multimedia keys for volume and LCD brightness
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true, repeating = true })
-hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"),                  { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"),                  { locked = true, repeating = true })
+-- Fn-ряд ThinkPad (F1–F12). Действие + OSD в swaync: ~/.local/bin/rice-osd
+-- Если вместо них приходят F1..F12 — выключен/включён Fn Lock: Fn+Esc.
+local osd = "/home/lain/.local/bin/rice-osd"
+hl.bind("XF86AudioMute",         hl.dsp.exec_cmd(osd .. " vol mute"),  { locked = true })                     -- F1
+hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd(osd .. " vol down"),  { locked = true, repeating = true })   -- F2
+hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd(osd .. " vol up"),    { locked = true, repeating = true })   -- F3
+hl.bind("XF86AudioMicMute",      hl.dsp.exec_cmd(osd .. " mic"),       { locked = true })                     -- F4
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd(osd .. " bri down"),  { locked = true, repeating = true })   -- F5
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd(osd .. " bri up"),    { locked = true, repeating = true })   -- F6
+hl.bind("XF86Display",           hl.dsp.exec_cmd("pkill -x nwg-displays || nwg-displays"))                 -- F7
+-- F8 (XF86WLAN / RFKill) обрабатывает ядро (thinkpad_acpi + rfkill) — бинд не нужен
+hl.bind("XF86Tools",             hl.dsp.exec_cmd("pkill -x nwg-look || nwg-look"))                         -- F9
+hl.bind("XF86Bluetooth",         hl.dsp.exec_cmd(osd .. " bt"))                                            -- F10
+hl.bind("XF86Keyboard",          hl.dsp.exec_cmd(menu))                                                    -- F11
+hl.bind("XF86Favorites",         hl.dsp.exec_cmd("/home/lain/.local/bin/rice-apply --next"))                -- F12
 
--- Requires playerctl
+-- медиа (playerctl)
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })

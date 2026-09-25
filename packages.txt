@@ -12,6 +12,7 @@ bind
 blueman
 bluez
 bluez-utils
+brightnessctl
 btop
 btrfs-progs
 chezmoi
@@ -97,6 +98,7 @@ pipewire
 pipewire-alsa
 pipewire-jack
 plasma-browser-integration
+playerctl
 power-profiles-daemon
 python-black
 python-pip
