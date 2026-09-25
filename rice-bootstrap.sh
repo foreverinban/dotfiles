@@ -9,7 +9,7 @@ export PATH="$HOME/.local/bin:$PATH"
 # ── 1. пакеты (repo + AUR через yay) ───────────────────────────────────────
 RICE_PKGS=(
   # этап 1 — палитра, GTK/Qt
-  python-pywal16 imagemagick jq openbsd-netcat adw-gtk-theme qt5ct qt6ct ttf-jetbrains-mono-nerd
+  python-pywal16 imagemagick jq openbsd-netcat qt5ct qt6ct ttf-jetbrains-mono-nerd
   # этап 2 — блокировка и логин
   hyprlock sddm-astronaut-theme qt6-svg qt6-virtualkeyboard qt6-multimedia-ffmpeg
   # этапы 3–4 — waybar/терминал
@@ -20,7 +20,9 @@ RICE_PKGS=(
   grimblast-git swappy cliphist wl-clipboard wlogout btop
 )
 say "Пакеты"
-yay -S --needed "${RICE_PKGS[@]}"
+# ставим только то, чего нет (pacman -T учитывает provides: adw-gtk-theme-git и т.п.)
+mapfile -t MISSING < <(pacman -T "${RICE_PKGS[@]}" || true)
+if [ ${#MISSING[@]} -gt 0 ]; then yay -S --needed "${MISSING[@]}"; else echo "  всё уже стоит"; fi
 
 # ── 2. дотфайлы ────────────────────────────────────────────────────────────
 say "chezmoi diff (просмотри) → apply"
