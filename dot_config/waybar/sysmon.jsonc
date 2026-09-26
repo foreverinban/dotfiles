@@ -1,0 +1,20 @@
+// Второй экземпляр waybar: виджет нагрузки справа сверху, НЕ бар.
+// Прозрачная колонка на слое bottom (под окнами), клики проходят насквозь.
+// Запуск/скрытие: rice-sysmon
+{
+    "name": "sysmon",
+    "layer": "bottom",
+    "position": "right",
+    "exclusive": false,
+    "passthrough": true,
+    "width": 330,
+    "modules-left": ["custom/sysmon"],
+    "modules-center": [],
+    "modules-right": [],
+    "custom/sysmon": {
+        "exec": "~/.local/bin/rice-sysmon-feed",
+        "return-type": "json",
+        "restart-interval": 5,
+        "tooltip": false
+    }
+}

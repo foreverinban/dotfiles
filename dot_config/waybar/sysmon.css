@@ -1,0 +1,19 @@
+@import "../../.cache/wal/colors-waybar.css";
+@import "../../.cache/rice/rice.css";
+
+* {
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 12px;
+    min-height: 0;
+    border: none;
+}
+window#waybar { background-color: transparent; }
+
+#custom-sysmon {
+    background-color: @surface;
+    border: 1px solid @bg_alt2;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin: 10px 10px 0 0;
+    color: @foreground;
+}

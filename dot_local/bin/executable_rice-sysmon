@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# rice-sysmon — виджет нагрузки (eww) на рабочем столе.
+# rice-sysmon — виджет нагрузки по ядрам и памяти (второй экземпляр waybar).
 #   rice-sysmon         показать/скрыть
 #   rice-sysmon open    показать    rice-sysmon close   скрыть
-set -u
-command -v eww >/dev/null || { echo "eww не установлен: yay -S eww" >&2; exit 1; }
-eww ping >/dev/null 2>&1 || { eww daemon; for _ in $(seq 20); do eww ping >/dev/null 2>&1 && break; sleep 0.2; done; }
+CFG="$HOME/.config/waybar/sysmon.jsonc"; CSS="$HOME/.config/waybar/sysmon.css"
+running() { pgrep -f "waybar -c $CFG" >/dev/null; }
+start()   { running || (setsid waybar -c "$CFG" -s "$CSS" >/tmp/rice-sysmon.log 2>&1 &); }
+stop()    { pkill -f "waybar -c $CFG"; pkill -f rice-sysmon-feed; }
 case "${1:-toggle}" in
-    open)  eww open sysmon ;;
-    close) eww close sysmon ;;
-    *)     if eww active-windows 2>/dev/null | grep -q sysmon; then eww close sysmon; else eww open sysmon; fi ;;
+    open)  start ;;
+    close) stop ;;
+    *)     if running; then stop; else start; fi ;;
 esac

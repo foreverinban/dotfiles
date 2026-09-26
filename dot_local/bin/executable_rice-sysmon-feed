@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""rice-sysmon-feed — поток JSON для waybar custom/sysmon:
+спарклайны нагрузки по каждому потоку CPU и по памяти (история ~60 с, шаг 2 с).
+Цвета — из ~/.cache/rice/rice.css (единая палитра rice)."""
+import json, os, re, time
+from collections import deque
+
+N = 30                       # точек истории (30 × 2 с = 60 с)
+STEP = 2
+BLOCKS = "▁▁▂▃▄▅▆▇█"         # 0% тоже видно — базовая линия
+HOME = os.path.expanduser("~")
+
+
+def palette():
+    c = {"accent": "#7f95ad", "fg": "#c5c9d0", "fg_dim": "#868b93",
+         "muted": "#5a606a", "warn": "#b8a27a", "urgent": "#c26a6a"}
+    try:
+        css = open(HOME + "/.cache/rice/rice.css").read()
+        for k, v in re.findall(r"@define-color\s+(\w+)\s+(#[0-9a-fA-F]{6})\s*;", css):
+            c[k] = v
+    except OSError:
+        pass
+    return c
+
+
+def read_stat():
+    out = {}
+    with open("/proc/stat") as f:
+        for line in f:
+            if not line.startswith("cpu"):
+                break
+            p = line.split()
+            v = list(map(int, p[1:9]))
+            out[p[0]] = (sum(v), v[3] + v[4])          # total, idle+iowait
+    return out
+
+
+def read_mem():
+    m = {}
+    with open("/proc/meminfo") as f:
+        for line in f:
+            k, v = line.split(":", 1)
+            m[k] = int(v.split()[0])                    # kB
+    total, avail = m["MemTotal"], m.get("MemAvailable", m["MemFree"])
+    used = total - avail
+    return 100 * used / total, used / 1048576, total / 1048576
+
+
+def spark(hist):
+    s = "".join(BLOCKS[min(8, round(v / 100 * 8))] for v in hist)
+    return s.rjust(N, " ")
+
+
+def span(color, text, bold=False):
+    b = " weight='bold'" if bold else ""
+    return f"<span foreground='{color}'{b}>{text}</span>"
+
+
+def level(c, v):
+    return c["urgent"] if v >= 90 else c["warn"] if v >= 70 else c["fg"]
+
+
+prev = read_stat()
+hist = {}
+memh = deque(maxlen=N)
+while True:
+    time.sleep(STEP)
+    cur = read_stat()
+    usage = {}
+    for k, (t, i) in cur.items():
+        if k in prev:
+            dt, di = t - prev[k][0], i - prev[k][1]
+            usage[k] = 0.0 if dt <= 0 else max(0.0, min(100.0, 100 * (dt - di) / dt))
+    prev = cur
+    cores = sorted((k for k in usage if k != "cpu"), key=lambda s: int(s[3:]))
+    for k in cores:
+        hist.setdefault(k, deque(maxlen=N)).append(usage[k])
+    mp, mu, mt = read_mem()
+    memh.append(mp)
+
+    c = palette()
+    avg = usage.get("cpu", 0.0)
+    lines = [span(c["accent"], "CPU", True) + " " * (N + 1)
+             + span(level(c, avg), f"{avg:4.0f}%", True)]
+    for k in cores:
+        v = usage[k]
+        lines.append(span(c["fg_dim"], f"C{k[3:]:<2}") + " "
+                     + span(c["accent"], spark(hist[k])) + " "
+                     + span(level(c, v), f"{v:3.0f}%"))
+    lines.append("")
+    lines.append(span(c["accent"], "MEM", True) + " " * (N - 12)
+                 + span(c["fg"], f"{mu:5.1f}/{mt:.0f}G ") + span(level(c, mp), f"{mp:4.0f}%", True))
+    lines.append("   " + span(c["fg"], spark(memh)))
+    print(json.dumps({"text": "\n".join(lines), "class": "sysmon"}), flush=True)
