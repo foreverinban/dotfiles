@@ -56,7 +56,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("swaync")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("/home/lain/.local/bin/wallpaper-watcher.sh")
-    hl.exec_cmd("/home/lain/.local/bin/rice-sysmon open")
 end)
 
 -------------------------------
@@ -217,7 +216,6 @@ hl.config({
     misc = {
         force_default_wallpaper = -1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
         disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
-        disable_autoreload      = true,  -- НЕ перечитывать конфиг при сохранении: reload сбрасывает бинды/раскладку
     },
 })
 

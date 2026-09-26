@@ -28,6 +28,9 @@ else
     "$HOME/.local/bin/rice-apply" --reload
 fi
 
+# виджет нагрузки (второй waybar) — автозапуск здесь, чтобы не трогать hyprland.lua
+"$HOME/.local/bin/rice-sysmon" open
+
 # таймер ротации
 (
     while sleep 600; do
