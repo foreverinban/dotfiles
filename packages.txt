@@ -29,7 +29,6 @@ fastfetch
 fd
 figlet
 firefox
-firewalld
 flatpak
 ghostwriter
 git
