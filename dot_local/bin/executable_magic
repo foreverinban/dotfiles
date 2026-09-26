@@ -39,7 +39,7 @@ connect() {
         echo '    }'
         echo '    tab name="Magic" {'
         while read -r h; do
-            echo "        pane command=\"ssh\" { args \"$h\"; }"
+            echo "        pane command=\"ssh\" close_on_exit=true { args \"$h\"; }"
         done <<< "$sel"
         echo '    }'
         echo '}'
