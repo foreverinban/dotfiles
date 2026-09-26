@@ -8,7 +8,9 @@ set -euo pipefail
 usage() { sed -n '2,5p' "$0" | sed 's/^# \{0,1\}//'; }
 
 hosts() {
-    grep -iE '^[[:space:]]*Host[[:space:]]' ~/.ssh/config 2>/dev/null \
+    # ~/.ssh/config + ~/.ssh/config.d/*.conf (подключаются через Include)
+    cat ~/.ssh/config ~/.ssh/config.d/*.conf 2>/dev/null \
+        | grep -iE '^[[:space:]]*Host[[:space:]]' \
         | awk '{for (i = 2; i <= NF; i++) print $i}' \
         | grep -v '[*?!]' | awk '!seen[$0]++'
 }
@@ -69,7 +71,7 @@ run() {
     printf '\n\033[2m%s ok, %s failed\033[0m\n' "$ok" "$fail"
 }
 
-[ -z "$(hosts)" ] && { echo "В ~/.ssh/config нет хостов"; exit 1; }
+[ -z "$(hosts)" ] && { echo "В ~/.ssh/config и ~/.ssh/config.d/*.conf нет хостов"; exit 1; }
 
 case "${1:-}" in
     run)        shift; run "$@" ;;

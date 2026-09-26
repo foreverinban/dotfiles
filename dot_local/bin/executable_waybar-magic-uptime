@@ -9,7 +9,8 @@ CONF="$HOME/.config/rice/rice.conf"
 if [ -n "${MAGIC_HOSTS:-}" ]; then
     hosts=$MAGIC_HOSTS
 else
-    hosts=$(grep -i '^Host ' ~/.ssh/config 2>/dev/null | awk '{print $2}' | grep -v '[*?]')
+    hosts=$(cat ~/.ssh/config ~/.ssh/config.d/*.conf 2>/dev/null | grep -iE '^[[:space:]]*Host[[:space:]]' \
+            | awk '{for (i = 2; i <= NF; i++) print $i}' | grep -v '[*?!]' | awk '!seen[$0]++')
 fi
 [ -z "$hosts" ] && { echo '{"text":""}'; exit 0; }
 
