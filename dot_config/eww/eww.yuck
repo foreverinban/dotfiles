@@ -35,6 +35,6 @@
   :monitor 0
   :stacking "bottom"
   :exclusive false
-  :focusable "none"
+  :focusable false
   :geometry (geometry :x "10px" :y "10px" :width "300px" :anchor "top right")
   (sysmon))
