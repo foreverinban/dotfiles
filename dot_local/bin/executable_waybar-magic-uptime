@@ -11,6 +11,10 @@ if [ -n "${MAGIC_HOSTS:-}" ]; then
 else
     hosts=$(cat ~/.ssh/config ~/.ssh/config.d/*.conf 2>/dev/null | grep -iE '^[[:space:]]*Host[[:space:]]' \
             | awk '{for (i = 2; i <= NF; i++) print $i}' | grep -v '[*?!]' | awk '!seen[$0]++')
+    # по умолчанию — только ноды magic-* (если такие есть), без малинки и прочего
+    if printf '%s\n' "$hosts" | grep -q '^magic-'; then
+        hosts=$(printf '%s\n' "$hosts" | grep '^magic-')
+    fi
 fi
 [ -z "$hosts" ] && { echo '{"text":""}'; exit 0; }
 
