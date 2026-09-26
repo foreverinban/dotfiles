@@ -157,5 +157,6 @@ xray
 yay
 yay-debug
 zellij
+zoxide
 zram-generator
 zsh
