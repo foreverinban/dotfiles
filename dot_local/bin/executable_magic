@@ -31,6 +31,12 @@ connect() {
     layout_file=$(mktemp --suffix=.kdl)
     {
         echo 'layout {'
+        echo '    default_tab_template {'
+        echo '        children'
+        echo '        pane size=1 borderless=true {'
+        echo '            plugin location="zellij:compact-bar"'
+        echo '        }'
+        echo '    }'
         echo '    tab name="Magic" {'
         while read -r h; do
             echo "        pane command=\"ssh\" { args \"$h\"; }"
