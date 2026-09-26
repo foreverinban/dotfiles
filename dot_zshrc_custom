@@ -19,8 +19,8 @@ if command -v eza >/dev/null; then
     alias lt='eza --tree --level=2 --icons=auto'
 fi
 
-# ── fastfetch: миниатюра обоев + инфо; только новое окно kitty шире 70 колонок, не в zellij
-if [[ -o interactive && "$TERM" == "xterm-kitty" && -z "$ZELLIJ" && -z "$RICE_FF_SHOWN" ]] && (( COLUMNS >= 70 )); then
+# ── fastfetch: сис-инфо при открытии терминала (не в zellij)
+if [[ -o interactive && -z "$ZELLIJ" && -z "$RICE_FF_SHOWN" ]]; then
     export RICE_FF_SHOWN=1
     command -v fastfetch >/dev/null && [ -f ~/.cache/rice/fastfetch.jsonc ] && fastfetch -c ~/.cache/rice/fastfetch.jsonc
 fi
