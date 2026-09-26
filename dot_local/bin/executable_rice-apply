@@ -70,8 +70,8 @@ if command -v hyprctl >/dev/null && [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; t
     for m in $(hyprctl monitors -j | jq -r '.[].name'); do
         hyprctl hyprpaper wallpaper "$m,$img,cover" >/dev/null 2>&1
     done
-    # 4. рамка/цвета Hyprland (hyprland.lua читает ~/.cache/rice/colors.lua)
-    hyprctl reload >/dev/null 2>&1
+    # 4. hyprctl reload НЕ делаем: на этой сборке Hyprland (Lua-конфиг) reload
+    #    сбрасывает бинды и раскладку. Конфиг применяется только при логине.
 fi
 
 # 5. живые приложения
