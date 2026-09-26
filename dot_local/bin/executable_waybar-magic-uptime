@@ -2,6 +2,7 @@
 # waybar custom/uptime — SSH-проверка аптайма Magic-нод.
 # Хосты: MAGIC_HOSTS из ~/.config/rice/rice.conf, иначе все Host из ~/.ssh/config.
 # Нужен ключ без пароля или ssh-agent: BatchMode не даёт ssh спрашивать пароль.
+export SSH_AUTH_SOCK="${SSH_AUTH_SOCK:-$XDG_RUNTIME_DIR/ssh-agent.socket}"   # waybar запущен без env shell
 CONF="$HOME/.config/rice/rice.conf"
 [ -f "$CONF" ] && source "$CONF"
 

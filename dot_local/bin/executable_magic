@@ -1,29 +1,79 @@
 #!/usr/bin/env bash
+# magic — работа с нодами из ~/.ssh/config
+#   magic [фильтр]             выбрать хосты (Tab — несколько) → zellij, по панели на хост
+#   magic run "cmd" [фильтр]   выполнить команду на выбранных хостах параллельно, вывод по хостам
+#   magic ls                   список хостов
 set -euo pipefail
 
-hosts=$(grep -i '^Host ' ~/.ssh/config 2>/dev/null | awk '{print $2}' | grep -v '\*' || true)
+usage() { sed -n '2,5p' "$0" | sed 's/^# \{0,1\}//'; }
 
-if [ -z "$hosts" ]; then
-    echo "В ~/.ssh/config нет хостов"
-    exit 1
-fi
+hosts() {
+    grep -iE '^[[:space:]]*Host[[:space:]]' ~/.ssh/config 2>/dev/null \
+        | awk '{for (i = 2; i <= NF; i++) print $i}' \
+        | grep -v '[*?!]' | awk '!seen[$0]++'
+}
 
-selected=$(echo "$hosts" | fzf --multi --prompt="Выбери серверы (Tab — отметить, Enter — подтвердить): ")
+# fzf с превью настроек хоста (ssh -G ничего не подключает, только резолвит конфиг)
+pick() {
+    hosts | fzf --multi --query="${1:-}" --prompt="${2:-magic ▸ }" \
+        --header='Tab — отметить несколько, Enter — подтвердить' \
+        --preview 'ssh -G {} 2>/dev/null | grep -E "^(hostname|user|port|identityfile|proxyjump|proxycommand) " | column -t' \
+        --preview-window='right,45%,border-left'
+}
 
-if [ -z "$selected" ]; then
-    echo "Ничего не выбрано"
-    exit 0
-fi
+connect() {
+    local sel
+    sel=$(pick "${1:-}") || true
+    [ -z "$sel" ] && { echo "Ничего не выбрано"; exit 0; }
+    local layout_file
+    layout_file=$(mktemp --suffix=.kdl)
+    {
+        echo 'layout {'
+        echo '    tab name="Magic" {'
+        while read -r h; do
+            echo "        pane command=\"ssh\" { args \"$h\"; }"
+        done <<< "$sel"
+        echo '    }'
+        echo '}'
+    } > "$layout_file"
+    zellij --layout "$layout_file"
+}
 
-layout_file=$(mktemp --suffix=.kdl)
-{
-  echo 'layout {'
-  echo '    tab name="Magic" {'
-  for h in $selected; do
-    echo "        pane command=\"ssh\" { args \"$h\" }"
-  done
-  echo '    }'
-  echo '}'
-} > "$layout_file"
+run() {
+    local cmd="${1:-}"; shift || true
+    [ -z "$cmd" ] && { echo 'Использование: magic run "команда" [фильтр]'; exit 1; }
+    local sel
+    sel=$(pick "${1:-}" "run: $cmd ▸ ") || true
+    [ -z "$sel" ] && exit 0
+    local tmp; tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+    while read -r h; do
+        (
+            if ssh -n -o ConnectTimeout=6 -o BatchMode=yes "$h" "$cmd" >"$tmp/$h.out" 2>&1; then
+                echo 0 >"$tmp/$h.rc"
+            else
+                echo $? >"$tmp/$h.rc"
+            fi
+        ) &
+    done <<< "$sel"
+    wait
+    local ok=0 fail=0 rc
+    while read -r h; do
+        rc=$(cat "$tmp/$h.rc")
+        if [ "$rc" = 0 ]; then
+            ok=$((ok + 1)); printf '\n\033[1;34m━━ %s\033[0m\n' "$h"
+        else
+            fail=$((fail + 1)); printf '\n\033[1;31m━━ %s  (exit %s)\033[0m\n' "$h" "$rc"
+        fi
+        cat "$tmp/$h.out"
+    done <<< "$sel"
+    printf '\n\033[2m%s ok, %s failed\033[0m\n' "$ok" "$fail"
+}
 
-zellij --layout "$layout_file"
+[ -z "$(hosts)" ] && { echo "В ~/.ssh/config нет хостов"; exit 1; }
+
+case "${1:-}" in
+    run)        shift; run "$@" ;;
+    ls)         hosts ;;
+    -h|--help)  usage ;;
+    *)          connect "${1:-}" ;;
+esac
