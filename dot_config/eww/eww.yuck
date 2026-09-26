@@ -3,14 +3,15 @@
 
 ;; Один график на логический поток. EWW_CPU.cores[i]; у i7-10610U их 8 (0..7).
 ;; Графики объявлены явно, а не через (for ...), — иначе история сбрасывается каждые 2 с.
-(defwidget core [i]
+;; name/usage передаются готовыми значениями: индексы — литералы (некоторые версии eww
+;; не умеют индексировать массив параметром виджета).
+(defwidget core [name usage]
   (box :class "core" :orientation "v" :space-evenly false
     (box :class "core-head" :space-evenly false
-      (label :class "core-name" :halign "start" :hexpand true :text "C${i}")
-      (label :class "core-val"  :halign "end"
-             :text "${round(EWW_CPU.cores[i].usage, 0)}%"))
+      (label :class "core-name" :halign "start" :hexpand true :text name)
+      (label :class "core-val"  :halign "end" :text "${round(usage, 0)}%"))
     (graph :class "g-core" :height 30
-           :value {EWW_CPU.cores[i].usage}
+           :value usage
            :min 0 :max 100 :time-range "60s" :thickness 1.5 :line-style "round")))
 
 (defwidget sysmon []
@@ -19,10 +20,10 @@
       (label :class "title" :halign "start" :hexpand true :text "CPU")
       (label :class "value" :halign "end" :text "${round(EWW_CPU.avg, 0)}%"))
     (box :class "cores" :orientation "v" :space-evenly false
-      (box :class "row" :spacing 8 (core :i 0) (core :i 1))
-      (box :class "row" :spacing 8 (core :i 2) (core :i 3))
-      (box :class "row" :spacing 8 (core :i 4) (core :i 5))
-      (box :class "row" :spacing 8 (core :i 6) (core :i 7)))
+      (box :class "row" :spacing 8 (core :name "C0" :usage {EWW_CPU.cores[0].usage}) (core :name "C1" :usage {EWW_CPU.cores[1].usage}))
+      (box :class "row" :spacing 8 (core :name "C2" :usage {EWW_CPU.cores[2].usage}) (core :name "C3" :usage {EWW_CPU.cores[3].usage}))
+      (box :class "row" :spacing 8 (core :name "C4" :usage {EWW_CPU.cores[4].usage}) (core :name "C5" :usage {EWW_CPU.cores[5].usage}))
+      (box :class "row" :spacing 8 (core :name "C6" :usage {EWW_CPU.cores[6].usage}) (core :name "C7" :usage {EWW_CPU.cores[7].usage})))
     (box :class "head mem-head" :space-evenly false
       (label :class "title" :halign "start" :hexpand true :text "MEM")
       (label :class "value" :halign "end"
