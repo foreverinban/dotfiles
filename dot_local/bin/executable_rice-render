@@ -207,12 +207,27 @@ def ascii_logo(v, cols=34, rows=15):
         f.write("\n".join(lines) + "\n")
 
 
+def image_logo(v, size=480):
+    """Квадратная миниатюра текущих обоев для fastfetch (kitty graphics, PNG)."""
+    img = v.get("wallpaper")
+    tool = shutil.which("magick") or shutil.which("convert")
+    if not img or not os.path.exists(img) or not tool:
+        return
+    try:
+        subprocess.run([tool, img, "-thumbnail", f"{size}x{size}^", "-gravity", "center",
+                        "-extent", f"{size}x{size}", os.path.join(OUT, "logo.png")],
+                       capture_output=True, check=True, timeout=30)
+    except Exception as e:  # noqa
+        print(f"rice-render: image logo: {e}", file=sys.stderr)
+
+
 def main():
     if not os.path.exists(WAL):
         sys.exit("rice-render: нет ~/.cache/wal/colors.json — сначала wal -i <картинка>")
     v = build_vars()
     render_all(v)
     ascii_logo(v)
+    image_logo(v)
     with open(os.path.join(OUT, "accent"), "w") as f:
         f.write(v["accent"] + "\n")
     print(f"rice-render: accent={v['accent']} ({v['accent_slot']}), opacity={v['opacity']}")

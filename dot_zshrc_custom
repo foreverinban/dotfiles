@@ -19,8 +19,8 @@ if command -v eza >/dev/null; then
     alias lt='eza --tree --level=2 --icons=auto'
 fi
 
-# ── fastfetch-баннер из текущих обоев: только в новом окне kitty, не в панелях zellij
-if [[ -o interactive && "$TERM" == "xterm-kitty" && -z "$ZELLIJ" && -z "$RICE_FF_SHOWN" ]]; then
+# ── fastfetch: миниатюра обоев + инфо; только новое окно kitty шире 70 колонок, не в zellij
+if [[ -o interactive && "$TERM" == "xterm-kitty" && -z "$ZELLIJ" && -z "$RICE_FF_SHOWN" ]] && (( COLUMNS >= 70 )); then
     export RICE_FF_SHOWN=1
     command -v fastfetch >/dev/null && [ -f ~/.cache/rice/fastfetch.jsonc ] && fastfetch -c ~/.cache/rice/fastfetch.jsonc
 fi
@@ -43,3 +43,5 @@ if command -v fzf >/dev/null; then
     export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --icons=always {} 2>/dev/null'"
     source <(fzf --zsh) 2>/dev/null
 fi
+
+alias ff="fastfetch -c ~/.cache/rice/fastfetch.jsonc"
