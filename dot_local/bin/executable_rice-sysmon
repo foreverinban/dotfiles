@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# rice-sysmon — виджет нагрузки (eww) на рабочем столе.
+#   rice-sysmon         показать/скрыть
+#   rice-sysmon open    показать    rice-sysmon close   скрыть
+set -u
+command -v eww >/dev/null || { echo "eww не установлен: yay -S eww" >&2; exit 1; }
+eww ping >/dev/null 2>&1 || { eww daemon; for _ in $(seq 20); do eww ping >/dev/null 2>&1 && break; sleep 0.2; done; }
+case "${1:-toggle}" in
+    open)  eww open sysmon ;;
+    close) eww close sysmon ;;
+    *)     if eww active-windows 2>/dev/null | grep -q sysmon; then eww close sysmon; else eww open sysmon; fi ;;
+esac

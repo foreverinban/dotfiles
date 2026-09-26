@@ -6,6 +6,7 @@ ani-cli
 breeze-plus
 claude-code
 darkly-bin
+eww
 grimblast-git
 happ-desktop-bin
 hysteria-bin
